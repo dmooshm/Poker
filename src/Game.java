@@ -125,6 +125,9 @@ class UI {
             Game.currentScreen = "instructions";
         }
 
+//        parent.fill(255, 0, 0);
+//        parent.circle(parent.mouseX, parent.mouseY, 30);
+
 
         //find way to input number of players
 

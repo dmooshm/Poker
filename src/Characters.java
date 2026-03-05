@@ -1,8 +1,10 @@
 import processing.core.PApplet;
 
+import javax.smartcardio.Card;
 import java.util.ArrayList;
 import java.util.Random;
 import java.lang.Math;
+import java.util.Collections;
 
 public class Characters {
 
@@ -79,86 +81,6 @@ class NPC extends Characters {
 
     }
 
-
-//    public static void makeHand(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) { //given information, returns best possible hand type
-//
-//
-//        ArrayList<Cards> allCards = new ArrayList<>();
-//        allCards.addAll(cardsInHand);
-//        allCards.addAll(communityCards);
-//
-//        boolean flushAndStraight = isFlushAndStraight(cardsInHand, communityCards);
-////        boolean straight = isStraight(cardsInHand, communityCards);
-//
-//        if (flushAndStraight){
-//            if (cardsInHand.get(0).value >= 10 && cardsInHand.get(1).value >= 10) { //royal flush
-//                for (Cards card : cardsInHand) {
-//                    if (card.value == 13) {
-//                        //create royal flush hand
-//                    } else { //straight flush
-//
-//                    }
-//                }
-//            } else { //straight flush
-//
-//            }
-//        } if ()
-//
-//
-//    }
-//
-//    private static boolean isFlushAndStraight(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//
-//    }
-//
-//    private static boolean isStraight(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//
-//    }
-//
-//    private static void compareHands(ArrayList<Cards> hand1, ArrayList<Cards> hand2) {
-//
-//    }
-//
-//    private void buildRoyalFlush(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//        handType = 10;
-//    }
-//
-//    private void buildStraightFlush(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//        handType = 9;
-//    }
-//
-//    private void buildfFourOfAKind(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//        handType = 8;
-//    }
-//
-//    private void buildFullHouse(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//        handType = 7;
-//    }
-//
-//    private void buildFlush(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//        handType = 6;
-//    }
-//
-//    private void buildStraight(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//        handType = 5;
-//    }
-//
-//    private void buildThreeOfAKind(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//        handType = 4;
-//    }
-//
-//    private void buildTwoPair(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//        handType = 3;
-//    }
-//
-//    private void buildOnePair(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//        handType = 2;
-//    }
-//
-//    private void buildHighCard(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
-//        handType = 1;
-//    }
-//
     public static void assignTell() {
 
     }
@@ -179,15 +101,24 @@ class Hand {
     ArrayList<Cards> cardsInHand = new ArrayList<>();
     ArrayList<Cards> opponentCardsInHand = new ArrayList<>();
     ArrayList<Cards> communityCards = new ArrayList<>();
+    ArrayList<Cards> aggregateHand = new ArrayList<>();
+    ArrayList<Cards> opponentAggregateHand = new ArrayList<>();
     ArrayList<Cards> optimizedHand = new ArrayList<>();
     int handStrength;
     int tiebreakerStrength;
     ArrayList<Integer> handStrengthCollection = new ArrayList<>();
     ArrayList<Integer> tiebreakerCollection = new ArrayList<>();
+    ArrayList<Cards> orderedHand = new ArrayList<>();
+
 
     Hand(ArrayList<Cards> cardsInHand,  ArrayList<Cards> communityCards) {
         this.cardsInHand = cardsInHand;
         this.communityCards = communityCards;
+        aggregateHand.addAll(communityCards);
+        aggregateHand.addAll(cardsInHand);
+        opponentAggregateHand.addAll(communityCards);
+        opponentAggregateHand.addAll(opponentCardsInHand);
+        orderedHand.addAll(aggregateHand);
     }
 
     public void calculateHandStrength() { //recurse through all possibliities
@@ -199,29 +130,452 @@ class Hand {
 
     }
 
-    private void optimizeHand() { //create the best possible hand with given information
+    private ArrayList<Cards> optimizeHand() { //create the best possible hand with given information
 
+        ArrayList<Cards> finalHand = new ArrayList<>();
+        finalHand.addAll(aggregateHand);
+        Collections.sort(finalHand);
 
+        if (isRoyalFlush()) {
+            finalHand.removeIf(card -> card.getValue() < 10);
+            ArrayList<Cards> aces = new ArrayList<>();
+            String suit;
+            for (Cards cards : finalHand) {
+                if (cards.value == 14) {
+                    aces.add(cards);
+                }
+            }
+            if (aces.size() == 1) {
+                suit = aces.get(0).getSuit();
+            } else { //2 aces
+                if (aces.get(0).getSuit() == finalHand.get(2).getSuit()) {
+                    suit = aces.get(0).getSuit();
+                } else { //the second ace's suit matches with the others
+                    suit = aces.get(1).getSuit();
+                }
+            }
+            finalHand.removeIf(card -> card.getSuit() != suit);
+        } else if (isStraightFlush()) {
+            String suit;
+            Cards highCard = finalHand.get(0);
+            if (highCard.suit.equals(finalHand.get(1).suit) && highCard.suit.equals(finalHand.get(2).suit)) {
+                suit = highCard.suit;
+            } else if (finalHand.get(1).suit.equals(finalHand.get(2).suit) && finalHand.get(1).suit.equals(finalHand.get(3).suit)) {
+                suit = finalHand.get(1).suit;
+            } else {
+                suit = finalHand.get(2).suit;
+            }
+            finalHand.removeIf(card -> card.getSuit() != suit);
+            int size = finalHand.size();
+            if (size == 7) {
+                finalHand.remove(size-1);
+                finalHand.remove(size-2);
+            } else if (size == 6) {
+                finalHand.remove(size-1);
+            } //final case is 5, requiring no changes
+        } else if (isFourOfAKind()) {
+            int matches = 0;
+            int value;
+            ArrayList<Cards> remaining3 = new ArrayList<>();
+            remaining3.addAll(finalHand);
+            for (int i = 1; i < 7; i++) {
+                if (finalHand.get(0).value == finalHand.get(i).value) {
+                    matches++;
+                }
+            }
+            if (matches == 3) {
+                value = finalHand.get(0).value;
+            } else {
+                matches = 0;
+                for (int i = 2; i < 7; i++) {
+                    if (finalHand.get(1).value == finalHand.get(i).value) {
+                        matches++;
+                    }
+                }
+                if (matches == 3) {
+                    value = finalHand.get(1).value;
+                } else {
+                    matches = 0;
+                    for (int i = 3; i < 7; i++) {
+                        if (finalHand.get(2).value == finalHand.get(i).value) {
+                            matches++;
+                        }
+                    }
+                    if (matches == 3) {
+                        value = finalHand.get(2).value;
+                    } else {
+                        value = finalHand.get(3).value;
+                    }
+                }
+            }
+            remaining3.removeIf(card -> card.getValue() == value);
+            remaining3.remove(0);
+            finalHand.removeAll(remaining3);
+        } else if (isFullHouse()) {
+            int matches = 0;
+            int value1; //value for the groupA
+            ArrayList<Cards> remaining4 = new ArrayList<>();
+            remaining4.addAll(finalHand);
+            int value2; //value for the groupB
+            for (int i = 1; i < 7; i++) {
+                if (finalHand.get(0).value == finalHand.get(i).value) {
+                    matches++;
+                }
+            }
+            if (matches == 2) {
+                value1 = finalHand.get(0).value;
+            } else {
+                matches = 0;
+                for (int i = 2; i < 7; i++) {
+                    if (finalHand.get(1).value == finalHand.get(i).value) {
+                        matches++;
+                    }
+                }
+                if (matches == 2) {
+                    value1 = finalHand.get(1).value;
+                } else {
+                    matches = 0;
+                    for (int i = 3; i < 7; i++) {
+                        if (finalHand.get(2).value == finalHand.get(i).value) {
+                            matches++;
+                        }
+                    }
+                    if (matches == 2) {
+                        value1 = finalHand.get(2).value;
+                    } else {
+                        matches = 0;
+                        for (int i = 4; i < 7; i++) {
+                            if (finalHand.get(3).value == finalHand.get(i).value) {
+                                matches++;
+                            }
+                        }
+                        if (matches == 2) {
+                            value1 = finalHand.get(3).value;
+                        } else {
+                            matches = 0;
+                            for (int i = 5; i < 7; i++) {
+                                if (finalHand.get(4).value == finalHand.get(i).value) {
+                                }
+                            }
+                            if (matches == 2) {
+                                value1 = finalHand.get(4).value;
+                            } else {
+                                value1 = 0; //failsafe
+                            }
+                        }
+                    }
+                }
+            }
+            remaining4.removeIf(card -> card.getValue() == value1);
+            matches = 0;
+            for (int i = 1; i < 4; i++) {
+                if (remaining4.get(0).value == finalHand.get(i).value) {
+                    matches++;
+                }
+            }
+            if (matches >= 1) {
+                value2 = remaining4.get(0).value;
+            } else {
+                matches = 0;
+                for (int i = 2; i < 4; i++) {
+                    if (remaining4.get(1).value == finalHand.get(i).value) {
+                        matches++;
+                    }
+                }
+                if (matches >= 1) {
+                    value2 = remaining4.get(1).value;
+                } else {
+                    matches = 0;
+                    for (int i = 3; i < 4; i++) {
+                        if (remaining4.get(2).value == finalHand.get(i).value) {
+                            matches++;
+                        }
+                    }
+                    if (matches >= 2) {
+                        value2 = remaining4.get(2).value;
+                    } else {
+                        value2 = 0;
+                    }
+                }
+            }
+            finalHand.removeIf(card -> card.value != value1 && card.value != value2);
+            if (finalHand.size() == 6) {
+                finalHand.remove(5);
+            }
+        } else if (isFlush()) {
+            int matches = 0;
+            String suit;
+            for (int i = 1; i < 7; i++) {
+                if (finalHand.get(0).value == finalHand.get(i).value) {
+                    matches++;
+                }
+            }
+            if (matches >= 5) {
+                suit = finalHand.get(0).suit;
+            } else {
+                for (int i = 2; i < 7; i++) {
+                    if (finalHand.get(1).value == finalHand.get(i).value) {
+                        matches++;
+                    }
+                }
+                if (matches >= 5) {
+                    suit = finalHand.get(1).suit;
+                } else {
+                    for (int i = 3; i < 7; i++) {
+                        if (finalHand.get(2).value == finalHand.get(i).value) {
+                            matches++;
+                        }
+                    }
+                    if (matches >= 5) {
+                        suit = finalHand.get(2).suit;
+                    } else {
+                        suit = "";
+                    }
+                }
+            }
+            finalHand.removeIf(card -> card.suit != suit);
+            if (finalHand.size() == 7) {
+                finalHand.remove(6);
+                finalHand.remove(5);
+            } else if (finalHand.size() == 6) {
+                finalHand.remove(5);
+            }
+        } else if (isStraight()) {
+            boolean segment1 = true;
+            boolean segment2 = true;
+            boolean segment3 = true;
+            for (int i = 0; i < 5; i++) {
+                if (finalHand.get(i).value != finalHand.get(i+1).value - 1) {
+                    segment1 = false;
+                }
+            }
+            for (int i = 1; i < 6; i++) {
+                if (finalHand.get(i).value != finalHand.get(i+1).value - 1) {
+                    segment2 = false;
+                }
+            }
+            for (int i = 2; i < 7; i++) {
+                if (finalHand.get(i).value != finalHand.get(i+1).value - 1) {
+                    segment3 = false;
+                }
+            }
+            if (segment1) {
+                finalHand.remove(6);
+                finalHand.remove(5);
+            } else if (segment2) {
+                finalHand.remove(6);
+                finalHand.remove(0);
+            } else {
+                finalHand.remove(0);
+                finalHand.remove(1);
+            }
+        } else if (isThreeOfAKind()) {
+            int matches = 0;
+            int value;
+            ArrayList<Cards> remaining4 = new ArrayList<>();
+            remaining4.addAll(finalHand);
+            for (int i = 1; i < 7; i++) {
+                if (finalHand.get(0).value == finalHand.get(i).value) {
+                    matches++;
+                }
+            }
+            if (matches == 2) {
+                value = finalHand.get(0).value;
+            } else {
+                matches = 0;
+                for (int i = 2; i < 7; i++) {
+                    if (finalHand.get(1).value == finalHand.get(i).value) {
+                        matches++;
+                    }
+                }
+                if (matches == 2) {
+                    value = finalHand.get(1).value;
+                } else {
+                    matches = 0;
+                    for (int i = 3; i < 7; i++) {
+                        if (finalHand.get(2).value == finalHand.get(i).value) {
+                            matches++;
+                        }
+                    }
+                    if (matches == 2) {
+                        value = finalHand.get(2).value;
+                    } else {
+                        matches = 0;
+                        for (int i = 4; i < 7; i++) {
+                            if (finalHand.get(3).value == finalHand.get(i).value) {
+                                matches++;
+                            }
+                        }
+                        if (matches == 2) {
+                            value = finalHand.get(3).value;
+                        } else {
+                            value = 0;
+                        }
+                    }
+                }
+            }
+            remaining4.removeIf(card -> card.getValue() == value);
+            remaining4.remove(0);
+            finalHand.removeAll(remaining4);
+        } else if (isTwoPair()) {
+            int value1 = 0;
+            int value2 = 0;
+            boolean found1 = false;
+            boolean found2 = false;
+            ArrayList<Cards> remaining5 = new ArrayList<>();
+            ArrayList<Cards> remaining3 = new ArrayList<>();
+            remaining5.addAll(finalHand);
+            for (int i = 0; i < 7; i++) {
+                for (int j = 0; j < 7; j++) {
+                    if (i != j && finalHand.get(i).value == finalHand.get(j).value) {
+                        value1 = finalHand.get(i).value;
+                        found1 = true;
+                        break;
+                    }
+                }
+                if (found1) break;
+            }
+            final int pairValue1 = value1;
+            remaining5.removeIf(card -> card.value == pairValue1);
+            for (int i = 0; i < 5; i++) {
+                for (int j = 0; j < 5; j++) {
+                    if (i != j && finalHand.get(i).value == finalHand.get(j).value) {
+                        value2 = finalHand.get(i).value;
+                        found2 = true;
+                        break;
+                    }
+                }
+                if (found2) break;
+            }
+            final int pairValue2 = value2;
+            remaining3.removeIf(card -> card.value == pairValue2);
+            remaining3.remove(0);
+            finalHand.removeAll(remaining3);
+        } else if (isOnePair()) {
+            int value = 0;
+            boolean found = false;
+            ArrayList<Cards> remaining5 = new ArrayList<>();
+            remaining5.addAll(finalHand);
+            for (int i = 0; i < 7; i++) {
+                for (int j = 0; j < 7; j++) {
+                    if (i != j && finalHand.get(i).value == finalHand.get(j).value) {
+                        value = finalHand.get(i).value;
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+            for (int i = 0; i < 3; i++) {
+                remaining5.remove(i);
+            }
+            finalHand.removeAll(remaining5); //remove the lowest 2
+        } else { //high card
+            int size = finalHand.size();
+            finalHand.remove(size-1);
+            finalHand.remove(size-2);
+        }
+
+        return finalHand;
 
     }
 
+
+
     private boolean isRoyalFlush() { //each 'is' function will check if hand is possible, then build it if yes
 
-        if (true) { //placeholding
-            handStrength = 10;
-            return true;
+        Collections.sort(orderedHand);
+        int acesPresent = 0;
+        int kingsPresent = 0;
+        int queensPresent = 0;
+        int jacksPresent = 0;
+        int tensPresent = 0;
+
+        for (int i = 0; i < 7; i++) { //this only needs to occur 4 times (one for each ace)
+            if (orderedHand.get(i).value == 14) {
+                acesPresent++;
+            } else if (orderedHand.get(i).value == 13) {
+                kingsPresent++;
+            } else if (orderedHand.get(i).value == 12) {
+                queensPresent++;
+            } else if (orderedHand.get(i).value == 11) {
+                jacksPresent++;
+            } else if (orderedHand.get(i).value == 10) {
+                tensPresent++;
+            }
         }
-        return false;
+        String suit;
+        boolean success = false;
+        if (acesPresent >= 1 && kingsPresent >= 1 && queensPresent >= 1 && jacksPresent >= 1 && tensPresent >= 1) {
+            for (int i = 0; i < acesPresent; i++) {
+                suit = orderedHand.get(i).suit;
+                for (int j = 0; i < kingsPresent; i++) {
+                    if (orderedHand.get(acesPresent + j).suit == suit) {
+                        for (int k = 0; k < queensPresent; k++) {
+                            if (orderedHand.get(acesPresent + kingsPresent + k).suit == suit) {
+                                for (int h = 0; h < jacksPresent; h++) {
+                                    if (orderedHand.get(acesPresent + kingsPresent + queensPresent + h).suit == suit) {
+                                        for (int l = 0; l < tensPresent; l++) {
+                                            if (orderedHand.get(acesPresent + kingsPresent + queensPresent + jacksPresent + l).suit == suit) {
+                                                success = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (success) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
 
     }
 
     private boolean isStraightFlush() { //checks for straight flush
 
-        if (true) { //placeholding
-            handStrength = 9;
-            return true;
+        int startingIndex;
+        int card1present = 0;
+        int card2present = 0;
+        int card3present = 0;
+        int card4present = 0;
+        int card5present = 0;
+        String suit;
+        int index0value;
+
+        if (orderedHand.get(0).value - orderedHand.get(1).value == 1 && orderedHand.get(1).value - orderedHand.get(2).value == 1) {
+            startingIndex = 0;
+        } else if (orderedHand.get(1).value - orderedHand.get(2).value == 1) {
+            startingIndex = 1;
+        } else {
+            startingIndex = 2;
         }
-        return false;
+
+        index0value = orderedHand.get(startingIndex).value;
+
+        for (int i = 0; i < 7; i++) {
+            if (orderedHand.get(i).value == index0value) {
+                card1present++;
+            } else if (orderedHand.get(i).value == index0value - 1) {
+                card2present++;
+            } else if (orderedHand.get(i).value == index0value - 2) {
+                card3present++;
+            } else if (orderedHand.get(i).value == index0value - 3) {
+                card4present++;
+            } else if (orderedHand.get(i).value == index0value - 4) {
+                card5present++;
+            }
+        }
+
+        for (int i = 0; i < 7; i++) {
+
+        }
 
     }
 
@@ -312,6 +666,8 @@ class handComparison {
 
     ArrayList<Cards> hand1 = new ArrayList<>();
     ArrayList<Cards> hand2 = new ArrayList<>();
+    int hand1Strength;
+    int hand2Strength;
 
     handComparison(ArrayList<Cards> hand1, ArrayList<Cards> hand2) {
 
@@ -321,6 +677,8 @@ class handComparison {
     }
 
     public void compare() {
+
+
 
     }
 

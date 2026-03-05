@@ -1,7 +1,7 @@
 import processing.core.PApplet;
 //import static java.lang.Math.PI;
 
-public class Cards {
+public class Cards implements Comparable<Cards> {
 
     PApplet parent;
 
@@ -13,6 +13,19 @@ public class Cards {
         this.suit = suit;
         this.value = value;
         this.parent = parent;
+    }
+
+    @Override
+    public int compareTo(Cards other) {
+        return Integer.compare(this.value, other.value);
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    public String getSuit() {
+        return suit;
     }
 
     float cardWidth = 60; //54 internal size
