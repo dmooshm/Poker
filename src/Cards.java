@@ -5,8 +5,8 @@ public class Cards implements Comparable<Cards> {
 
     PApplet parent;
 
-    static String suit; //options: "
-    static int value;
+    String suit; //options: "
+    int value;
     static boolean faceUp = false;
 
     Cards(PApplet parent, String suit, int value) {
@@ -31,58 +31,59 @@ public class Cards implements Comparable<Cards> {
     float cardWidth = 60; //54 internal size
     float cardHeight = 86; //80 internal size
 
-    public void drawFaceDown(float xpos, float ypos, float angle) {
-
-        parent.pushMatrix();
-
-        parent.translate(xpos, ypos);
-        parent.rotate(parent.radians(angle));
+    public void drawFaceDown(int xpos, int ypos) {
 
         parent.fill(255, 50, 50); //building card
-        parent.strokeWeight(6);
+        parent.strokeWeight(3);
         parent.stroke(0);
-        parent.rect(-cardWidth / 2, -cardHeight / 2, cardWidth, cardHeight, 10);
-
-//        parent.stroke(255); //building pattern on card
-//        parent.strokeWeight(2);
-//        float xbase = -cardWidth/2 + 4.0f;
-//        float ybase = -cardHeight/2 + 4.0f;
-//        for (int xinstance = 0; xinstance < 3; xinstance++) {
-//            for (int yinstance = 0; yinstance < 4; yinstance++) {
-//                if (xinstance % 2 == 0) {
-//                    parent.line((xbase + 18 * xinstance + 9.0f), (ybase + 20 * yinstance), (xbase + 18 * xinstance + 9.0f), (ybase + 20 * yinstance + 20 / 3f));
-//                } else {
-//                    parent.line((xbase + 18 * xinstance + 9.0f + 9.0f), (ybase + 20 * yinstance), (xbase + 18 * xinstance + 9.0f + 9.0f), (ybase + 20 * yinstance + 20 / 3f));
-//                }
-//            }
-//        }
-
-        parent.fill(255);
-        parent.textAlign(parent.CENTER, parent.CENTER);
-        parent.text("back", -cardWidth/2 + 20, -cardHeight/2 + 20);
-
-        parent.popMatrix();
+        parent.rect(xpos - cardWidth/2, ypos - cardHeight/2, cardWidth, cardHeight, 10);
 
 
     }
 
-    public void drawFaceUp(float xpos, float ypos, float angle) {
-
-        parent.pushMatrix();
-
-        parent.translate(xpos, ypos);
-        parent.rotate(parent.radians(angle));
+    public void drawFaceUp(int xpos, int ypos) {
 
         parent.fill(255); //building card
         parent.strokeWeight(3);
         parent.stroke(0);
-        parent.rect(-cardWidth / 2, -cardHeight / 2, cardWidth, cardHeight, 10);
+        parent.rect(xpos - cardWidth/2, ypos - cardHeight/2, cardWidth, cardHeight, 10);
 
-        parent.fill(0);
+        String suitLetter = "";
+        String valueLetter = "";
+        if (suit.equals("Clubs")) {
+            parent.fill(0);
+            suitLetter = "C";
+        } else if (suit.equals("Spades")) {
+            parent.fill(0);
+            suitLetter = "S";
+        } else if (suit.equals("Hearts")) {
+            parent.fill(255, 0, 0);
+            suitLetter = "H";
+        } else if (suit.equals("Diamonds")) {
+            parent.fill(255, 0, 0);
+            suitLetter = "D";
+        }
+        switch (value) {
+            case 2 -> valueLetter = "2";
+            case 3 -> valueLetter = "3";
+            case 4 -> valueLetter = "4";
+            case 5 -> valueLetter = "5";
+            case 6 -> valueLetter = "6";
+            case 7 -> valueLetter = "7";
+            case 8 -> valueLetter = "8";
+            case 9 -> valueLetter = "9";
+            case 10 -> valueLetter = "10";
+            case 11 -> valueLetter = "J";
+            case 12 -> valueLetter = "Q";
+            case 13 -> valueLetter = "K";
+            case 14 -> valueLetter = "A";
+        }
+        parent.textSize(20);
         parent.textAlign(parent.CENTER, parent.CENTER);
-        parent.text("front", -cardWidth/2 + 20, -cardHeight/2 + 20);
+        parent.text(valueLetter, xpos, ypos - 10);
+        parent.text(suitLetter, xpos, ypos + 10);
 
-        parent.popMatrix();
+
 
     }
 

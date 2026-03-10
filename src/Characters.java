@@ -10,6 +10,7 @@ public class Characters {
 
     String name;
     Hand hand;
+    int balance;
     Cards card1;
     Cards card2;
     boolean folded = false;
@@ -18,6 +19,7 @@ public class Characters {
 
         this.name = name;
         this.hand = hand;
+        this.balance = balance;
 
     }
 
@@ -36,18 +38,17 @@ public class Characters {
 
     public void receiveCards(Cards card1, Cards card2) {
 
+        hand.cardsInHand.add(card1);
+        hand.cardsInHand.add(card2);
+
         this.card1 = card1;
         this.card2 = card2;
 
-//        if (playerNumber == 0) {
-//            card1.drawFaceUp(Game.screenWidth/2-40, Game.screenHeight/2, 0);
-//            card2.drawFaceUp(Game.screenWidth/2+40, Game.screenHeight/2, 0);
-//        } else {
-////            card1.drawFaceDown();
-////            card2.drawFaceDown();
-//        }
+    }
 
-        //playerNumebr is indexed beginning at zero
+    public void registerCommunityCard(Cards card) {
+
+        hand.communityCards.add(card);
 
     }
 

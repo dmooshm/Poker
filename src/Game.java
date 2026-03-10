@@ -9,7 +9,10 @@ import static java.util.Collections.fill;
 
 public class Game extends PApplet {
 
+    UI UI;
+
     public static int numberOfPlayers;
+    public static int startingBalance;
     public static ArrayList<Characters> characterList = new ArrayList<>();
     public static String currentScreen;
     public static ArrayList<Cards> cardsInPlay = new ArrayList<>();
@@ -20,13 +23,14 @@ public class Game extends PApplet {
 
     public void setup() {
 
+        UI = new UI(this);
         System.out.println("program started");
-        UI UI = new UI(this);
         background(100);
         frameRate(60);
         createShuffledDeck();
         currentScreen = "openingScreen";
         numberOfPlayers = 5; //test (placeholder)
+        startingBalance = 2000; //test, again
         try {
             UI.createPlayers();
             UI.dealCards();
@@ -46,7 +50,6 @@ public class Game extends PApplet {
     }
 
     public void draw() {
-        UI UI = new UI(this);
         background(255);
 //        UI.openingScreen();
 //        UI.instructions();
@@ -108,23 +111,30 @@ class UI {
     String playerName;
     ArrayList<String> randomNPCNames = new ArrayList<>();
     int cardIndex = 0;
+    boolean revealCards = false;
 
     public UI(PApplet parent) {
         this.parent = parent;
     }
 
     public void openingScreen() {
-//        parent.fill(0);
-//        parent.textSize(128);
-//        parent.text("word", 40, 120);
+        parent.fill(0);
+        parent.textSize(55);
+        parent.textAlign(parent.CENTER, parent.CENTER);
+        parent.text("Welcome to Texas Hold'Em Poker!", Game.screenWidth/2, Game.screenHeight/2 - 250);
 
         Buttons instructionsButton = new Buttons(parent);
 
-        instructionsButton.makeButton(Game.screenWidth/2, Game.screenHeight/2, 400, 200, 30, "hello");
+        instructionsButton.makeButton(Game.screenWidth/2, Game.screenHeight/2, 300, 100, 30, "instructions");
         if (parent.mousePressed && instructionsButton.clickable) {
             Game.currentScreen = "instructions";
         }
 
+        Buttons beginButton = new Buttons(parent);
+        beginButton.makeButton(Game.screenWidth/2, Game.screenHeight/2 + 150, 300, 100, 30, "begin game");
+        if (parent.mousePressed && beginButton.clickable) {
+            Game.currentScreen = "gameplay";
+        }
 //        parent.fill(255, 0, 0);
 //        parent.circle(parent.mouseX, parent.mouseY, 30);
 
@@ -134,31 +144,43 @@ class UI {
     }
 
     public void instructions() {
-        parent.text("Hello", 400, 400);
+        parent.fill(0);
+        parent.textSize(55);
+        parent.textAlign(parent.CENTER, parent.CENTER);
+        parent.text("Instructions!", Game.screenWidth/2, Game.screenHeight/2);
+
+        Buttons homeButton = new Buttons(parent);
+        homeButton.makeButton(Game.screenWidth/2, Game.screenHeight/2 + 200, 300, 100, 30, "home menu");
+        if (parent.mousePressed && homeButton.clickable) {
+            Game.currentScreen = "openingScreen";
+        }
     }
 
     public void gameplay() {
 
-        Cards Cards = new Cards(parent,"spades",1);
-
-//        Cards.drawFaceDown(400, 400, 45);
-        Cards.drawFaceUp(400, 400, 45);
+        parent.fill(0, 100, 0);
+        parent.rect(Game.screenWidth/2 - 345, Game.screenHeight/2  - 275, 690, 350, 45);
         renderCards();
+        renderNames();
 
     }
 
     public void createPlayers() throws Exception {
 
-        Game.characterList.add(new Player(playerName));
+        Hand playerHand = new Hand(new ArrayList<>(), new ArrayList<>());
+        Game.characterList.add(new Player("You", playerHand, Game.startingBalance));
 
         loadData("src/names.csv");
         Random randomNumber = new Random();
 
         for (int i = 1; i < Game.numberOfPlayers; i++) {
+
             int rand = randomNumber.nextInt(randomNPCNames.size());
             String randomName = randomNPCNames.get(rand);
             randomNPCNames.remove(randomName);
-            Game.characterList.add(new NPC(randomName));
+            Hand npcHand = new Hand(new ArrayList<>(), new ArrayList<>());
+            Game.characterList.add(new NPC(randomName, npcHand, Game.startingBalance));
+
         }
     }
 
@@ -170,17 +192,59 @@ class UI {
             Game.characterList.get(i).receiveCards(card1, card2);
             cardIndex += 2;
         }
+
     }
 
     public void renderCards() {
 
-        for (int i = 0; i < Game.numberOfPlayers; i++) {
-//            Game.characterList.get(i).card1.drawFaceUp(400, 400, 0);
-//            Game.characterList.get(i).card2.drawFaceUp(400, 300, 0);
+        revealCards = false; //test
 
-            Game.characterList.get(i).card1.drawFaceDown(400, 400, 0);
-            Game.characterList.get(i).card2.drawFaceDown(400, 300, 0);
+        Game.characterList.get(0).card1.drawFaceUp(Game.screenWidth/2 + 30, Game.screenHeight/2+ 125);
+        Game.characterList.get(0).card2.drawFaceUp(Game.screenWidth/2 - 30, Game.screenHeight/2 + 125);
+
+        if (revealCards) {
+            Game.characterList.get(1).card1.drawFaceUp(Game.screenWidth/2 + 30 + 250, Game.screenHeight/2 + 125);
+            Game.characterList.get(1).card2.drawFaceUp(Game.screenWidth/2 - 30 + 250, Game.screenHeight/2 + 125);
+
+            Game.characterList.get(4).card1.drawFaceUp(Game.screenWidth/2 + 30 - 250, Game.screenHeight/2 + 125);
+            Game.characterList.get(4).card2.drawFaceUp(Game.screenWidth/2 - 30 - 250, Game.screenHeight/2 + 125);
+
+            Game.characterList.get(2).card1.drawFaceUp(Game.screenWidth/2 + 30 + 150, Game.screenHeight/2 - 325);
+            Game.characterList.get(2).card2.drawFaceUp(Game.screenWidth/2 - 30 + 150, Game.screenHeight/2 - 325);
+
+            Game.characterList.get(3).card1.drawFaceUp(Game.screenWidth/2 + 30 - 150, Game.screenHeight/2 - 325);
+            Game.characterList.get(3).card2.drawFaceUp(Game.screenWidth/2 - 30 - 150, Game.screenHeight/2 - 325);
+        } else { //NPC cards face down
+            Game.characterList.get(1).card1.drawFaceDown(Game.screenWidth/2 + 30 + 250, Game.screenHeight/2 + 125);
+            Game.characterList.get(1).card2.drawFaceDown(Game.screenWidth/2 - 30 + 250, Game.screenHeight/2 + 125);
+
+            Game.characterList.get(4).card1.drawFaceDown(Game.screenWidth/2 + 30 - 250, Game.screenHeight/2 + 125);
+            Game.characterList.get(4).card2.drawFaceDown(Game.screenWidth/2 - 30 - 250, Game.screenHeight/2 + 125);
+
+            Game.characterList.get(2).card1.drawFaceDown(Game.screenWidth/2 + 30 + 150, Game.screenHeight/2 - 325);
+            Game.characterList.get(2).card2.drawFaceDown(Game.screenWidth/2 - 30 + 150, Game.screenHeight/2 - 325);
+
+            Game.characterList.get(3).card1.drawFaceDown(Game.screenWidth/2 + 30 - 150, Game.screenHeight/2 - 325);
+            Game.characterList.get(3).card2.drawFaceDown(Game.screenWidth/2 - 30 - 150, Game.screenHeight/2 - 325);
         }
+
+    }
+
+    public void renderNames() {
+
+        parent.fill(0);
+        parent.textSize(30);
+        parent.textAlign(parent.CENTER, parent.CENTER);
+
+        parent.text("You", Game.screenWidth/2, Game.screenHeight/2 + 185);
+        parent.text(Game.characterList.get(1).name, Game.screenWidth/2 + 250, Game.screenHeight/2 + 185);
+        parent.text(Game.characterList.get(4).name, Game.screenWidth/2 - 250, Game.screenHeight/2 + 185);
+        parent.text(Game.characterList.get(2).name, Game.screenWidth/2 + 150, Game.screenHeight/2 - 385);
+        parent.text(Game.characterList.get(3).name, Game.screenWidth/2 - 150, Game.screenHeight/2 - 385);
+//        parent.text(1, Game.screenWidth/2 + 250, Game.screenHeight/2 + 185);
+//        parent.text(4, Game.screenWidth/2 - 250, Game.screenHeight/2 + 185);
+//        parent.text(2, Game.screenWidth/2 + 150, Game.screenHeight/2 - 385);
+//        parent.text(3, Game.screenWidth/2 - 150, Game.screenHeight/2 - 385);
 
     }
 
@@ -198,14 +262,27 @@ class UI {
 
     }
 
+    public void preFlop() {
+
+
+
+    }
+
     public void flop() {
 
-        Cards card1 = Game.cardDeck.get(cardIndex);
-        Cards card2 = Game.cardDeck.get(cardIndex + 1);
-        Cards card3 = Game.cardDeck.get(cardIndex + 2);
-        cardIndex += 3;
 
-        //find way of taking turns
+
+    }
+
+    public void turn() {
+
+
+
+    }
+
+    public void river() {
+
+
 
     }
 

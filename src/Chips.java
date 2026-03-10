@@ -10,9 +10,7 @@ public class Chips {
 
     public void drawChips() {
 
-        for (int i = 0; i < Game.numberOfPlayers; i++) {
 
-        }
 
     }
 
