@@ -14,12 +14,25 @@ public class Characters {
     Cards card2;
     boolean folded = false;
 
-    Characters(String name, Hand hand) {
+    Characters(String name, Hand hand, int balance) {
 
         this.name = name;
         this.hand = hand;
 
     }
+
+    ArrayList<Cards> finalHand = new ArrayList<>();
+    int handType;
+    //10-royal flush
+    //9-straight flush
+    //8-four of a kind
+    //7-full house
+    //6-flush
+    //5-straight
+    //4-three of a kind
+    //3-two of a kind
+    //2-one of a kind
+    //1-high card
 
     public void receiveCards(Cards card1, Cards card2) {
 
@@ -38,13 +51,33 @@ public class Characters {
 
     }
 
+    public void generateFinalHand() {
+
+    }
+
+    public void bet() {
+
+    }
+
+    public void call() {
+
+    }
+
+    public void raise() {
+
+    }
+
+    public void fold() {
+
+    }
+
 }
 
 
 class Player extends Characters{
 
-    Player(String name, Hand hand) {
-        super(name, hand);
+    Player(String name, Hand hand, int balance) {
+        super(name, hand, balance);
     }
 
     public static void takeTurn(ArrayList<Cards> cardsInPlay) {
@@ -56,26 +89,13 @@ class Player extends Characters{
 
 class NPC extends Characters {
 
-    NPC (String name, Hand hand) {
-        super(name, hand);
+    NPC (String name, Hand hand, int balance) {
+        super(name, hand, balance);
     }
 
     public static void takeTurn(ArrayList<Cards> cardsInPlay, ArrayList<Cards> communityCards) {
 
     }
-
-    ArrayList<Cards> finalHand = new ArrayList<>();
-    int handType;
-    //10-royal flush
-    //9-straight flush
-    //8-four of a kind
-    //7-full house
-    //6-flush
-    //5-straight
-    //4-three of a kind
-    //3-two of a kind
-    //2-one of a kind
-    //1-high card
 
     public static void calculateProbability() {
 
@@ -98,45 +118,130 @@ class NPC extends Characters {
 
 class Hand {
 
+    PApplet parent;
+
     ArrayList<Cards> cardsInHand = new ArrayList<>();
-    ArrayList<Cards> opponentCardsInHand = new ArrayList<>();
     ArrayList<Cards> communityCards = new ArrayList<>();
     ArrayList<Cards> aggregateHand = new ArrayList<>();
-    ArrayList<Cards> opponentAggregateHand = new ArrayList<>();
-    ArrayList<Cards> optimizedHand = new ArrayList<>();
-    int handStrength;
-    int tiebreakerStrength;
-    ArrayList<Integer> handStrengthCollection = new ArrayList<>();
-    ArrayList<Integer> tiebreakerCollection = new ArrayList<>();
-    ArrayList<Cards> orderedHand = new ArrayList<>();
 
 
-    Hand(ArrayList<Cards> cardsInHand,  ArrayList<Cards> communityCards) {
+    Hand(ArrayList<Cards> cardsInHand, ArrayList<Cards> communityCards) {
         this.cardsInHand = cardsInHand;
         this.communityCards = communityCards;
-        aggregateHand.addAll(communityCards);
-        aggregateHand.addAll(cardsInHand);
-        opponentAggregateHand.addAll(communityCards);
-        opponentAggregateHand.addAll(opponentCardsInHand);
-        orderedHand.addAll(aggregateHand);
     }
 
-    public void calculateHandStrength() { //recurse through all possibliities
+    ArrayList<ArrayList<Cards>> allPossibleHands = new ArrayList<>();
 
-        //for each personal unknown, optimize and add to handStrength collection
-        //for each opponent unknown, do the same
+    public double calculateHandStrength() { //recurse through all possibliities; positive means player is stronger, negative means opponent is stronger
 
-        //average handStrength of both; use average of tiebreaker if not
+        ArrayList<Cards> testHand = new ArrayList<>();
+        ArrayList<Cards> fullDeck = new ArrayList<>();
+        ArrayList<Cards> playerComplimentaryDeck = new ArrayList<>();
+        ArrayList<Cards> opponentComplimentaryDeck = new ArrayList<>();
+        double averagePlayerStrength;
+        double averageOpponentStrength;
+        double strengthDifference;
+
+        for (int i = 0; i < 4; i++) { //creating 52 card deck to subtract from
+            for (int j = 0; j < 13; j++) {
+                String suit = switch (i) {
+                    case 0 -> "Spades";
+                    case 1 -> "Hearts";
+                    case 2 -> "Clubs";
+                    case 3 -> "Diamonds";
+                    default -> null;
+                };
+
+                int value = switch (j) {
+                    case 0 -> 14; //ace
+                    case 1 -> 2;
+                    case 2 -> 3;
+                    case 3 -> 4;
+                    case 4 -> 5;
+                    case 5 -> 6;
+                    case 6 -> 7;
+                    case 7 -> 8;
+                    case 8 -> 9;
+                    case 9 -> 10;
+                    case 10 -> 11; //jack
+                    case 11 -> 12; //queen
+                    case 12 -> 13; //king
+                    default -> 0;
+                };
+
+                Cards currentCard = new Cards(parent, suit, value);
+                fullDeck.add(currentCard);
+            }
+        }
+
+        playerComplimentaryDeck.addAll(fullDeck);
+        playerComplimentaryDeck.removeAll(aggregateHand);
+        makeCombinations(playerComplimentaryDeck, 7-aggregateHand.size());
+        averagePlayerStrength = findAverageStrength(allPossibleHands);
+
+        allPossibleHands.clear();
+        opponentComplimentaryDeck.addAll(fullDeck);
+        opponentComplimentaryDeck.removeAll(communityCards);
+        makeCombinations(opponentComplimentaryDeck, 7-communityCards.size());
+        averageOpponentStrength = findAverageStrength(allPossibleHands);
+
+        strengthDifference = averagePlayerStrength - averageOpponentStrength;
+        return strengthDifference;
 
     }
 
-    private ArrayList<Cards> optimizeHand() { //create the best possible hand with given information
+    public double findAverageStrength(ArrayList<ArrayList<Cards>> allPossibleHands) {
 
-        ArrayList<Cards> finalHand = new ArrayList<>();
-        finalHand.addAll(aggregateHand);
+        double handsChecked = 0;
+        double sumStrength = 0;
+        double averageStrength;
+
+        for (int i = 0; i < allPossibleHands.size(); i++) {
+            ArrayList<Cards> cards = allPossibleHands.get(i);
+            handsChecked++;
+            if (isRoyalFlush(cards)) {
+                sumStrength+=10;
+            } else if (isStraightFlush(cards)) {
+                sumStrength+=9;
+            } else if (isFourOfAKind(cards)) {
+                sumStrength+=8;
+            } else if (isFullHouse(cards)) {
+                sumStrength+=7;
+            } else if (isFlush(cards)) {
+                sumStrength+=6;
+            } else if (isStraight(cards)) {
+                sumStrength+=5;
+            } else if (isThreeOfAKind(cards)) {
+                sumStrength+=4;
+            } else if (isTwoPair(cards)) {
+                sumStrength+=3;
+            } else if (isOnePair(cards)) {
+                sumStrength+=2;
+            } else { //high card
+                sumStrength+=1;
+            }
+        }
+
+        averageStrength = sumStrength/handsChecked;
+        return averageStrength;
+
+    }
+
+    public void makeCombinations(ArrayList<Cards> cardsToCreateCombo, int chooseValue) {
+
+        ArrayList<Cards> possibleHand = new ArrayList<>();
+
+        //implementation
+
+        allPossibleHands.add(possibleHand);
+
+    }
+
+    private ArrayList<Cards> optimizeHand(ArrayList<Cards> finalHand) { //create the best possible hand with given information
+
         Collections.sort(finalHand);
 
-        if (isRoyalFlush()) {
+        if (isRoyalFlush(finalHand)) {
             finalHand.removeIf(card -> card.getValue() < 10);
             ArrayList<Cards> aces = new ArrayList<>();
             String suit;
@@ -155,7 +260,7 @@ class Hand {
                 }
             }
             finalHand.removeIf(card -> card.getSuit() != suit);
-        } else if (isStraightFlush()) {
+        } else if (isStraightFlush(finalHand)) {
             String suit;
             Cards highCard = finalHand.get(0);
             if (highCard.suit.equals(finalHand.get(1).suit) && highCard.suit.equals(finalHand.get(2).suit)) {
@@ -173,7 +278,7 @@ class Hand {
             } else if (size == 6) {
                 finalHand.remove(size-1);
             } //final case is 5, requiring no changes
-        } else if (isFourOfAKind()) {
+        } else if (isFourOfAKind(finalHand)) {
             int matches = 0;
             int value;
             ArrayList<Cards> remaining3 = new ArrayList<>();
@@ -211,7 +316,7 @@ class Hand {
             remaining3.removeIf(card -> card.getValue() == value);
             remaining3.remove(0);
             finalHand.removeAll(remaining3);
-        } else if (isFullHouse()) {
+        } else if (isFullHouse(finalHand)) {
             int matches = 0;
             int value1; //value for the groupA
             ArrayList<Cards> remaining4 = new ArrayList<>();
@@ -302,7 +407,7 @@ class Hand {
             if (finalHand.size() == 6) {
                 finalHand.remove(5);
             }
-        } else if (isFlush()) {
+        } else if (isFlush(finalHand)) {
             int matches = 0;
             String suit;
             for (int i = 1; i < 7; i++) {
@@ -340,7 +445,7 @@ class Hand {
             } else if (finalHand.size() == 6) {
                 finalHand.remove(5);
             }
-        } else if (isStraight()) {
+        } else if (isStraight(finalHand)) {
             boolean segment1 = true;
             boolean segment2 = true;
             boolean segment3 = true;
@@ -369,7 +474,7 @@ class Hand {
                 finalHand.remove(0);
                 finalHand.remove(1);
             }
-        } else if (isThreeOfAKind()) {
+        } else if (isThreeOfAKind(finalHand)) {
             int matches = 0;
             int value;
             ArrayList<Cards> remaining4 = new ArrayList<>();
@@ -417,7 +522,7 @@ class Hand {
             remaining4.removeIf(card -> card.getValue() == value);
             remaining4.remove(0);
             finalHand.removeAll(remaining4);
-        } else if (isTwoPair()) {
+        } else if (isTwoPair(finalHand)) {
             int value1 = 0;
             int value2 = 0;
             boolean found1 = false;
@@ -451,7 +556,7 @@ class Hand {
             remaining3.removeIf(card -> card.value == pairValue2);
             remaining3.remove(0);
             finalHand.removeAll(remaining3);
-        } else if (isOnePair()) {
+        } else if (isOnePair(finalHand)) {
             int value = 0;
             boolean found = false;
             ArrayList<Cards> remaining5 = new ArrayList<>();
@@ -482,22 +587,22 @@ class Hand {
 
     Cards straightFlushHighCard;
 
-    private boolean isRoyalFlush() { //each 'is' function will check if hand is possible, then build it if yes
+    private boolean isRoyalFlush(ArrayList<Cards> cardsToCheck) { //each 'is' function will check if hand is possible, then build it if yes
 
-        if (isStraightFlush() && straightFlushHighCard.getValue() == 14) {
+        if (isStraightFlush(cardsToCheck) && straightFlushHighCard.getValue() == 14) {
             return true;
         }
         return false;
 
     }
 
-    private boolean isStraightFlush() { //checks for straight flush
+    private boolean isStraightFlush(ArrayList<Cards> cardsToCheck) { //checks for straight flush
 
-        Collections.sort(orderedHand);
+        Collections.sort(cardsToCheck);
 
         for (int i = 0; i < 3; i++) {
-            if (SHAC5(orderedHand.get(i), orderedHand.get(i+1), orderedHand.get(i+2), orderedHand.get(i+3), orderedHand.get(i+4))) {
-                straightFlushHighCard = orderedHand.get(i);
+            if (SHAC5(cardsToCheck.get(i), cardsToCheck.get(i+1), cardsToCheck.get(i+2), cardsToCheck.get(i+3), cardsToCheck.get(i+4))) {
+                straightFlushHighCard = cardsToCheck.get(i);
                 return true;
             }
         }
@@ -527,45 +632,12 @@ class Hand {
         return false;
     }
 
-    private boolean isFourOfAKind() {
+    private boolean isFourOfAKind(ArrayList<Cards> cardsToCheck) {
 
-        if (true) { //placeholding
-            handStrength = 8;
-            return true;
-        }
-        return false;
+        Collections.sort(cardsToCheck);
 
-    }
-
-    private boolean isFullHouse() {
-
-        if (true) { //placeholding
-            handStrength = 7;
-            return true;
-        }
-        return false;
-
-    }
-
-    private boolean isFlush() {
-
-        if (true) { //placeholding
-            handStrength = 6;
-            return true;
-        }
-        return false;
-
-    }
-
-    private boolean isStraight() {
-
-        Collections.sort(orderedHand);
-
-        for (int i = 0; i < 3; i++) {
-            if (orderedHand.get(i).value == orderedHand.get(i+1).value + 1 &&
-            orderedHand.get(i+1).value == orderedHand.get(i+2).value + 1 &&
-            orderedHand.get(i+2).value == orderedHand.get(i+3).value + 1 &&
-            orderedHand.get(i+3).value == orderedHand.get(i+4).value + 1) {
+        for (int i = 0; i < 4; i++) {
+            if (isEqual4(cardsToCheck.get(i), cardsToCheck.get(i+1), cardsToCheck.get(i+2), cardsToCheck.get(i+3))) {
                 return true;
             }
         }
@@ -573,45 +645,156 @@ class Hand {
 
     }
 
-    private boolean isThreeOfAKind() {
+    private boolean isEqual4(Cards card0, Cards card1, Cards card2, Cards card3) {
 
-        if (true) { //placeholding
-            handStrength = 4;
+        if (isEqual2(card0, card1) && isEqual2(card2, card3) && isEqual2(card1, card2)) {
             return true;
         }
         return false;
 
     }
 
-    private boolean isTwoPair() {
+    private boolean isEqual2(Cards card0, Cards card1) {
 
-        if (true) { //placeholding
-            handStrength = 3;
+        if (card0.value == card1.value) {
             return true;
         }
         return false;
 
     }
 
-    private boolean isOnePair() {
+    private boolean isFullHouse(ArrayList<Cards> cardsToCheck) {
 
-        if (true) { //placeholding
-            handStrength = 2;
+        Collections.sort(cardsToCheck);
+
+        for (int i = 0; i < 5; i++) {
+            if (isEqual2(cardsToCheck.get(i), cardsToCheck.get(i+1))) {
+                if (isEqual3(cardsToCheck.get(i), cardsToCheck.get(i+1), cardsToCheck.get(i+2))) {
+                    for (int j = i; j < i+4; i++) {
+                        if (isEqual2(cardsToCheck.get(j), cardsToCheck.get(j+1))) {
+                            return true;
+                        }
+                    }
+                } else {
+                    for (int j = i; j < 5; j++) {
+                        if (isEqual3(cardsToCheck.get(j), cardsToCheck.get(j+1), cardsToCheck.get(j+2))) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+
+    }
+
+    private boolean isEqual3(Cards card0, Cards card1, Cards card2) {
+
+        if (isEqual2(card0, card1) && isEqual2(card1, card2)) {
             return true;
         }
         return false;
 
     }
 
-    private boolean isHighCard() {
+    private boolean isFlush(ArrayList<Cards> cardsToCheck) {
 
-        if  (true) { //placeholding
-            handStrength = 1;
+        Collections.sort(cardsToCheck);
+
+        for (int i = 0; i < 3; i++) {
+            if (sameSuit5(cardsToCheck.get(i), cardsToCheck.get(i+1), cardsToCheck.get(i+2), cardsToCheck.get(i+3), cardsToCheck.get(i+4))) {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    private boolean sameSuit5(Cards card0, Cards card1, Cards card2, Cards card3, Cards card4) {
+
+        if (sameSuit2(card0, card1) && sameSuit2(card1, card2) && sameSuit2(card2, card3) && sameSuit2(card3, card4)) {
             return true;
         }
         return false;
 
     }
+
+    private boolean sameSuit2(Cards card0, Cards card1) {
+
+        if (card0.suit.equals(card1.suit)) {
+            return true;
+        }
+        return false;
+
+    }
+
+    private boolean isStraight(ArrayList<Cards> cardsToCheck) {
+
+        Collections.sort(cardsToCheck);
+
+        for (int i = 0; i < 3; i++) {
+            if (cardsToCheck.get(i).value == cardsToCheck.get(i+1).value + 1 &&
+            cardsToCheck.get(i+1).value == cardsToCheck.get(i+2).value + 1 &&
+            cardsToCheck.get(i+2).value == cardsToCheck.get(i+3).value + 1 &&
+            cardsToCheck.get(i+3).value == cardsToCheck.get(i+4).value + 1) {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    private boolean isThreeOfAKind(ArrayList<Cards> cardsToCheck) {
+
+        Collections.sort(cardsToCheck);
+
+        for (int i = 0; i < 5; i++) {
+            if (isEqual3(cardsToCheck.get(i), cardsToCheck.get(i+1), cardsToCheck.get(i+2))) {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    private boolean isTwoPair(ArrayList<Cards> cardsToCheck) {
+
+        Collections.sort(cardsToCheck);
+
+        for (int i = 0; i < 4; i++) {
+            if (isEqual2(cardsToCheck.get(i), cardsToCheck.get(i+1))) {
+                for (int j = i; j < 6; j++) {
+                    if (isEqual2(cardsToCheck.get(j), cardsToCheck.get(j+1))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+
+    }
+
+    private boolean isOnePair(ArrayList<Cards> cardsToCheck) {
+
+        Collections.sort(cardsToCheck);
+
+        for (int i = 0; i < 6; i++){
+            if (isEqual2(cardsToCheck.get(i), cardsToCheck.get(i+1))) {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+//    private boolean isHighCard() {
+//
+//        if  (true) { //placeholding
+//            return true;
+//        }
+//        return false;
+//
+//    }
 
 }
 

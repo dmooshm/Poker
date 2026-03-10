@@ -76,7 +76,7 @@ public class Game extends PApplet {
                 };
 
                 int value = switch (j) {
-                    case 0 -> 1; //ace
+                    case 0 -> 14; //ace
                     case 1 -> 2;
                     case 2 -> 3;
                     case 3 -> 4;
