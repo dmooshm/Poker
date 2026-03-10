@@ -480,103 +480,51 @@ class Hand {
 
     }
 
-
+    Cards straightFlushHighCard;
 
     private boolean isRoyalFlush() { //each 'is' function will check if hand is possible, then build it if yes
 
-        Collections.sort(orderedHand);
-        int acesPresent = 0;
-        int kingsPresent = 0;
-        int queensPresent = 0;
-        int jacksPresent = 0;
-        int tensPresent = 0;
-
-        for (int i = 0; i < 7; i++) { //this only needs to occur 4 times (one for each ace)
-            if (orderedHand.get(i).value == 14) {
-                acesPresent++;
-            } else if (orderedHand.get(i).value == 13) {
-                kingsPresent++;
-            } else if (orderedHand.get(i).value == 12) {
-                queensPresent++;
-            } else if (orderedHand.get(i).value == 11) {
-                jacksPresent++;
-            } else if (orderedHand.get(i).value == 10) {
-                tensPresent++;
-            }
+        if (isStraightFlush() && straightFlushHighCard.getValue() == 14) {
+            return true;
         }
-        String suit;
-        boolean success = false;
-        if (acesPresent >= 1 && kingsPresent >= 1 && queensPresent >= 1 && jacksPresent >= 1 && tensPresent >= 1) {
-            for (int i = 0; i < acesPresent; i++) {
-                suit = orderedHand.get(i).suit;
-                for (int j = 0; i < kingsPresent; i++) {
-                    if (orderedHand.get(acesPresent + j).suit == suit) {
-                        for (int k = 0; k < queensPresent; k++) {
-                            if (orderedHand.get(acesPresent + kingsPresent + k).suit == suit) {
-                                for (int h = 0; h < jacksPresent; h++) {
-                                    if (orderedHand.get(acesPresent + kingsPresent + queensPresent + h).suit == suit) {
-                                        for (int l = 0; l < tensPresent; l++) {
-                                            if (orderedHand.get(acesPresent + kingsPresent + queensPresent + jacksPresent + l).suit == suit) {
-                                                success = true;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (success) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        return false;
 
     }
 
     private boolean isStraightFlush() { //checks for straight flush
 
-        int startingIndex;
-        int card1present = 0;
-        int card2present = 0;
-        int card3present = 0;
-        int card4present = 0;
-        int card5present = 0;
-        String suit;
-        int index0value;
+        Collections.sort(orderedHand);
 
-        if (orderedHand.get(0).value - orderedHand.get(1).value == 1 && orderedHand.get(1).value - orderedHand.get(2).value == 1) {
-            startingIndex = 0;
-        } else if (orderedHand.get(1).value - orderedHand.get(2).value == 1) {
-            startingIndex = 1;
-        } else {
-            startingIndex = 2;
-        }
-
-        index0value = orderedHand.get(startingIndex).value;
-
-        for (int i = 0; i < 7; i++) {
-            if (orderedHand.get(i).value == index0value) {
-                card1present++;
-            } else if (orderedHand.get(i).value == index0value - 1) {
-                card2present++;
-            } else if (orderedHand.get(i).value == index0value - 2) {
-                card3present++;
-            } else if (orderedHand.get(i).value == index0value - 3) {
-                card4present++;
-            } else if (orderedHand.get(i).value == index0value - 4) {
-                card5present++;
+        for (int i = 0; i < 3; i++) {
+            if (SHAC5(orderedHand.get(i), orderedHand.get(i+1), orderedHand.get(i+2), orderedHand.get(i+3), orderedHand.get(i+4))) {
+                straightFlushHighCard = orderedHand.get(i);
+                return true;
             }
         }
+        return false;
 
-        for (int i = 0; i < 7; i++) {
+    }
 
+    private boolean SHAC5(Cards card0, Cards card1, Cards card2, Cards card3, Cards card4) {
+        if (SHAC2(card0, card1)) {
+            if (SHAC2(card1, card2)) {
+                if (SHAC2(card2, card3)) {
+                    if (SHAC2(card3, card4)) {
+                        return true;
+                    }
+                }
+            }
         }
+        return false;
+    }
 
+    private boolean SHAC2(Cards card0, Cards card1) { //same hand and consecutive
+        if (card0.value == card1.value + 1) {
+            if (card0.suit == card1.suit) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isFourOfAKind() {
@@ -611,9 +559,15 @@ class Hand {
 
     private boolean isStraight() {
 
-        if (true) { //placeholding
-            handStrength = 5;
-            return true;
+        Collections.sort(orderedHand);
+
+        for (int i = 0; i < 3; i++) {
+            if (orderedHand.get(i).value == orderedHand.get(i+1).value + 1 &&
+            orderedHand.get(i+1).value == orderedHand.get(i+2).value + 1 &&
+            orderedHand.get(i+2).value == orderedHand.get(i+3).value + 1 &&
+            orderedHand.get(i+3).value == orderedHand.get(i+4).value + 1) {
+                return true;
+            }
         }
         return false;
 
