@@ -227,17 +227,24 @@ class Hand {
 
     }
 
-    public void makeCombinations(ArrayList<Cards> cardsToCreateCombo, int chooseValue) {
-
-        ArrayList<Cards> possibleHand = new ArrayList<>();
-
-        //implementation
-
-        allPossibleHands.add(possibleHand);
-
+    public void makeCombinations(ArrayList<Cards> cardsToChooseFrom, int setLength) { //from chat; check if it actually works
+        makeCombinationsHelper(cardsToChooseFrom, setLength, 0, new ArrayList<>());
     }
 
-    private ArrayList<Cards> optimizeHand(ArrayList<Cards> finalHand) { //create the best possible hand with given information
+    private void makeCombinationsHelper(ArrayList<Cards> cardsToChooseFrom, int setLength, int start, ArrayList<Cards> possibleHand) {
+        if (possibleHand.size() == setLength) {
+            allPossibleHands.add(new ArrayList<>(possibleHand)); // IMPORTANT: copy
+            return;
+        }
+
+        for (int i = start; i < cardsToChooseFrom.size(); i++) {
+            possibleHand.add(cardsToChooseFrom.get(i));
+            makeCombinationsHelper(cardsToChooseFrom, setLength, i + 1, possibleHand);
+            possibleHand.remove(possibleHand.size() - 1); // backtrack
+        }
+    }
+
+    public static ArrayList<Cards> optimizeHand(ArrayList<Cards> finalHand) { //create the best possible hand with given information
 
         Collections.sort(finalHand);
 
@@ -585,9 +592,9 @@ class Hand {
 
     }
 
-    Cards straightFlushHighCard;
+    static Cards straightFlushHighCard;
 
-    private boolean isRoyalFlush(ArrayList<Cards> cardsToCheck) { //each 'is' function will check if hand is possible, then build it if yes
+    private static boolean isRoyalFlush(ArrayList<Cards> cardsToCheck) { //each 'is' function will check if hand is possible, then build it if yes
 
         if (isStraightFlush(cardsToCheck) && straightFlushHighCard.getValue() == 14) {
             return true;
@@ -596,7 +603,7 @@ class Hand {
 
     }
 
-    private boolean isStraightFlush(ArrayList<Cards> cardsToCheck) { //checks for straight flush
+    private static boolean isStraightFlush(ArrayList<Cards> cardsToCheck) { //checks for straight flush
 
         Collections.sort(cardsToCheck);
 
@@ -610,7 +617,7 @@ class Hand {
 
     }
 
-    private boolean SHAC5(Cards card0, Cards card1, Cards card2, Cards card3, Cards card4) {
+    private static boolean SHAC5(Cards card0, Cards card1, Cards card2, Cards card3, Cards card4) {
         if (SHAC2(card0, card1)) {
             if (SHAC2(card1, card2)) {
                 if (SHAC2(card2, card3)) {
@@ -623,7 +630,7 @@ class Hand {
         return false;
     }
 
-    private boolean SHAC2(Cards card0, Cards card1) { //same hand and consecutive
+    private static boolean SHAC2(Cards card0, Cards card1) { //same hand and consecutive
         if (card0.value == card1.value + 1) {
             if (card0.suit == card1.suit) {
                 return true;
@@ -632,7 +639,7 @@ class Hand {
         return false;
     }
 
-    private boolean isFourOfAKind(ArrayList<Cards> cardsToCheck) {
+    private static boolean isFourOfAKind(ArrayList<Cards> cardsToCheck) {
 
         Collections.sort(cardsToCheck);
 
@@ -645,7 +652,7 @@ class Hand {
 
     }
 
-    private boolean isEqual4(Cards card0, Cards card1, Cards card2, Cards card3) {
+    private static boolean isEqual4(Cards card0, Cards card1, Cards card2, Cards card3) {
 
         if (isEqual2(card0, card1) && isEqual2(card2, card3) && isEqual2(card1, card2)) {
             return true;
@@ -654,7 +661,7 @@ class Hand {
 
     }
 
-    private boolean isEqual2(Cards card0, Cards card1) {
+    private static boolean isEqual2(Cards card0, Cards card1) {
 
         if (card0.value == card1.value) {
             return true;
@@ -663,7 +670,7 @@ class Hand {
 
     }
 
-    private boolean isFullHouse(ArrayList<Cards> cardsToCheck) {
+    private static boolean isFullHouse(ArrayList<Cards> cardsToCheck) {
 
         Collections.sort(cardsToCheck);
 
@@ -688,7 +695,7 @@ class Hand {
 
     }
 
-    private boolean isEqual3(Cards card0, Cards card1, Cards card2) {
+    private static boolean isEqual3(Cards card0, Cards card1, Cards card2) {
 
         if (isEqual2(card0, card1) && isEqual2(card1, card2)) {
             return true;
@@ -697,7 +704,7 @@ class Hand {
 
     }
 
-    private boolean isFlush(ArrayList<Cards> cardsToCheck) {
+    private static boolean isFlush(ArrayList<Cards> cardsToCheck) {
 
         Collections.sort(cardsToCheck);
 
@@ -710,7 +717,7 @@ class Hand {
 
     }
 
-    private boolean sameSuit5(Cards card0, Cards card1, Cards card2, Cards card3, Cards card4) {
+    private static boolean sameSuit5(Cards card0, Cards card1, Cards card2, Cards card3, Cards card4) {
 
         if (sameSuit2(card0, card1) && sameSuit2(card1, card2) && sameSuit2(card2, card3) && sameSuit2(card3, card4)) {
             return true;
@@ -719,7 +726,7 @@ class Hand {
 
     }
 
-    private boolean sameSuit2(Cards card0, Cards card1) {
+    private static boolean sameSuit2(Cards card0, Cards card1) {
 
         if (card0.suit.equals(card1.suit)) {
             return true;
@@ -728,7 +735,7 @@ class Hand {
 
     }
 
-    private boolean isStraight(ArrayList<Cards> cardsToCheck) {
+    private static boolean isStraight(ArrayList<Cards> cardsToCheck) {
 
         Collections.sort(cardsToCheck);
 
@@ -744,7 +751,7 @@ class Hand {
 
     }
 
-    private boolean isThreeOfAKind(ArrayList<Cards> cardsToCheck) {
+    private static boolean isThreeOfAKind(ArrayList<Cards> cardsToCheck) {
 
         Collections.sort(cardsToCheck);
 
@@ -757,7 +764,7 @@ class Hand {
 
     }
 
-    private boolean isTwoPair(ArrayList<Cards> cardsToCheck) {
+    private static boolean isTwoPair(ArrayList<Cards> cardsToCheck) {
 
         Collections.sort(cardsToCheck);
 
@@ -774,7 +781,7 @@ class Hand {
 
     }
 
-    private boolean isOnePair(ArrayList<Cards> cardsToCheck) {
+    private static boolean isOnePair(ArrayList<Cards> cardsToCheck) {
 
         Collections.sort(cardsToCheck);
 
@@ -799,24 +806,33 @@ class Hand {
 }
 
 
-class handComparison {
-
-    ArrayList<Cards> hand1 = new ArrayList<>();
-    ArrayList<Cards> hand2 = new ArrayList<>();
-    int hand1Strength;
-    int hand2Strength;
-
-    handComparison(ArrayList<Cards> hand1, ArrayList<Cards> hand2) {
-
-        this.hand1 = hand1;
-        this.hand2 = hand2;
-
-    }
-
-    public void compare() {
-
-
-
-    }
-
-}
+//class handComparison {
+//
+//    ArrayList<Cards> hand1 = new ArrayList<>();
+//    ArrayList<Cards> hand2 = new ArrayList<>();
+//    ArrayList<Cards> optimizedHand1 = new ArrayList<>();
+//    ArrayList<Cards> optimizedHand2 = new ArrayList<>();
+//    int hand1Strength;
+//    int hand2Strength;
+//    int hand1Tiebreaker;
+//    int hand2Tiebreaker;
+//
+//    handComparison(ArrayList<Cards> hand1, ArrayList<Cards> hand2) {
+//
+//        this.hand1 = hand1;
+//        this.hand2 = hand2;
+//
+//    }
+//
+//    public void compare() {
+//
+//        optimizedHand1 = Hand.optimizeHand(hand1);
+//        optimizedHand2 = Hand.optimizeHand(hand2);
+//
+//    }
+//
+//    private int determineStrength() {
+//
+//    }
+//
+//}
