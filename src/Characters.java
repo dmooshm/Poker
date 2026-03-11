@@ -24,7 +24,7 @@ public class Characters {
         this.hand = hand;
         this.balance = balance;
         this.parent = parent;
-        this.UI = new UI(parent); // ← move it here
+        this.UI = new UI(parent);
 
     }
 
@@ -61,27 +61,17 @@ public class Characters {
 
     }
 
-    public void bet() {
-
-    }
-
     public void call() {
-
-    }
-
-    public void raise() {
-
+        bet = Game.minimumBet;
+        balance-=bet;
+        Game.pot+=bet;
     }
 
     public void fold() {
-
+        folded = true;
     }
 
     public void takeTurn() {
-
-        if (folded) {
-            return;
-        }
 
     }
 
@@ -103,6 +93,11 @@ class Player extends Characters{
     @Override
     public void takeTurn() {
 
+        if (folded) {
+            nextTurn();
+            return;
+        }
+
         if (!betting) {
 
             boolean firstTurn = true;
@@ -112,7 +107,6 @@ class Player extends Characters{
                 betButton.makeButton(Game.screenWidth / 2, Game.screenHeight / 2 + 275, 100, 50, 10, "bet", 35);
                 if (parent.mousePressed && betButton.clickable) {
                     betting = true;
-                    raise();
                 }
                 firstTurn = false;
 
@@ -129,7 +123,6 @@ class Player extends Characters{
                 raiseButton.makeButton(Game.screenWidth / 2, Game.screenHeight / 2 + 275, 100, 50, 10, "raise", 35);
                 if (parent.mousePressed && raiseButton.clickable) {
                     betting = true;
-                    raise();
                 }
 
                 Buttons foldButton = new Buttons(parent);
@@ -149,15 +142,14 @@ class Player extends Characters{
             parent.text("Bet: " + bet, Game.screenWidth / 2, Game.screenHeight / 2 + 225);
             Buttons betButton = new Buttons(parent);
             betButton.makeButton(725, 700, 115, 40, 10, "make bet", 25);
-            if (parent.mousePressed && betButton.clickable) {
-
+            if (parent.mousePressed && betButton.clickable && bet > Game.minimumBet) {
+                Game.pot+=bet;
+                balance-=bet;
+                Game.minimumBet = bet;
+                bet = 0;
+                nextTurn();
             }
         }
-
-    }
-
-    @Override
-    public void raise() {
 
     }
 
@@ -172,11 +164,16 @@ class NPC extends Characters {
 
     public void takeTurn() {
 
-        System.out.println("took turn");
+        double handStrength = hand.calculateHandStrength();
 
-    }
+        Random rand = new Random();
+        int bluff = rand.nextInt(2);
+        UI.revealCards = true;
+        if (bluff == 0 && handStrength >= 0) {
+            //raise or call
+        } else if (bluff == 0 && handStrength < 0) {
 
-    public static void calculateProbability() {
+        }
 
     }
 
@@ -188,7 +185,7 @@ class NPC extends Characters {
 
     }
 
-    public static void revealCards() {
+    public void revealCards() {
 
     }
 

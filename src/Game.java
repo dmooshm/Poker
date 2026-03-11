@@ -21,6 +21,7 @@ public class Game extends PApplet {
     public static int currentTurn = 0;
     public static int minimumBet = 0;
     public static int pot;
+    public static String phase = "";
 
     public static void main(String[] args) {
         PApplet.main("Game");
@@ -314,10 +315,6 @@ class UI {
                 parent.delay(200);
             }
         }
-
-    }
-
-    public void renderBetAndPot() {
 
     }
 
