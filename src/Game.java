@@ -1,4 +1,6 @@
 import processing.core.PApplet;
+
+import javax.smartcardio.Card;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.io.BufferedReader;
@@ -12,10 +14,13 @@ public class Game extends PApplet {
     UI UI;
 
     public static int numberOfPlayers;
-    public static int startingBalance;
+    public static int startingBalance = 2000;
     public static ArrayList<Characters> characterList = new ArrayList<>();
     public static String currentScreen;
     public static ArrayList<Cards> cardsInPlay = new ArrayList<>();
+    public static int currentTurn = 0;
+    public static int minimumBet = 0;
+    public static int pot;
 
     public static void main(String[] args) {
         PApplet.main("Game");
@@ -125,13 +130,13 @@ class UI {
 
         Buttons instructionsButton = new Buttons(parent);
 
-        instructionsButton.makeButton(Game.screenWidth/2, Game.screenHeight/2, 300, 100, 30, "instructions");
+        instructionsButton.makeButton(Game.screenWidth/2, Game.screenHeight/2, 300, 100, 30, "instructions", 50);
         if (parent.mousePressed && instructionsButton.clickable) {
             Game.currentScreen = "instructions";
         }
 
         Buttons beginButton = new Buttons(parent);
-        beginButton.makeButton(Game.screenWidth/2, Game.screenHeight/2 + 150, 300, 100, 30, "begin game");
+        beginButton.makeButton(Game.screenWidth/2, Game.screenHeight/2 + 150, 300, 100, 30, "begin game", 50);
         if (parent.mousePressed && beginButton.clickable) {
             Game.currentScreen = "gameplay";
         }
@@ -150,7 +155,7 @@ class UI {
         parent.text("Instructions!", Game.screenWidth/2, Game.screenHeight/2);
 
         Buttons homeButton = new Buttons(parent);
-        homeButton.makeButton(Game.screenWidth/2, Game.screenHeight/2 + 200, 300, 100, 30, "home menu");
+        homeButton.makeButton(Game.screenWidth/2, Game.screenHeight/2 + 200, 300, 100, 30, "home menu", 50);
         if (parent.mousePressed && homeButton.clickable) {
             Game.currentScreen = "openingScreen";
         }
@@ -162,13 +167,16 @@ class UI {
         parent.rect(Game.screenWidth/2 - 345, Game.screenHeight/2  - 275, 690, 350, 45);
         renderCards();
         renderNames();
+//        renderChips();
+        Game.characterList.get(Game.currentTurn).takeTurn();
+        renderMinBetAndPot();
 
     }
 
     public void createPlayers() throws Exception {
 
         Hand playerHand = new Hand(new ArrayList<>(), new ArrayList<>());
-        Game.characterList.add(new Player("You", playerHand, Game.startingBalance));
+        Game.characterList.add(new Player("You", playerHand, Game.startingBalance, parent));
 
         loadData("src/names.csv");
         Random randomNumber = new Random();
@@ -179,7 +187,7 @@ class UI {
             String randomName = randomNPCNames.get(rand);
             randomNPCNames.remove(randomName);
             Hand npcHand = new Hand(new ArrayList<>(), new ArrayList<>());
-            Game.characterList.add(new NPC(randomName, npcHand, Game.startingBalance));
+            Game.characterList.add(new NPC(randomName, npcHand, Game.startingBalance, parent));
 
         }
     }
@@ -248,6 +256,71 @@ class UI {
 
     }
 
+    public void renderMinBetAndPot() {
+
+        parent.fill(255);
+        parent.textSize(20);
+        parent.textAlign(parent.LEFT, parent.CENTER);
+
+        parent.text("Pot: " + Game.pot, Game.screenWidth/2 - 325, Game.screenHeight/2 - 215);
+        parent.text("Minimum Bet: " + Game.minimumBet, Game.screenWidth/2 - 325, Game.screenHeight/2 - 240);
+//        parent.text("Balance: " + Game.characterList.get(Game.currentTurn).balance, Game.screenWidth/2 - 325, Game.screenHeight/2 - 240);
+
+    }
+
+    public void renderChips() {
+
+        Chips fiveHundred = new Chips(parent);
+        fiveHundred.makeChips(200, 700, 500);
+        if (parent.mousePressed && fiveHundred.clickable) {
+            if (Game.characterList.get(Game.currentTurn).bet + 500 <= Game.characterList.get(Game.currentTurn).balance) {
+                Game.characterList.get(Game.currentTurn).bet += 500;
+                parent.delay(200);
+            }
+        }
+
+        Chips oneHundred = new Chips(parent);
+        oneHundred.makeChips(300, 700, 100);
+        if (parent.mousePressed && oneHundred.clickable) {
+            if (Game.characterList.get(Game.currentTurn).bet + 100 <= Game.characterList.get(Game.currentTurn).balance) {
+                Game.characterList.get(Game.currentTurn).bet += 100;
+                parent.delay(200);
+            }
+        }
+
+        Chips fifty = new Chips(parent);
+        fifty.makeChips(400, 700, 50);
+        if (parent.mousePressed && fifty.clickable) {
+            if (Game.characterList.get(Game.currentTurn).bet + 50 <= Game.characterList.get(Game.currentTurn).balance) {
+                Game.characterList.get(Game.currentTurn).bet += 50;
+                parent.delay(200);
+            }
+        }
+
+        Chips ten = new Chips(parent);
+        ten.makeChips(500, 700, 10);
+        if (parent.mousePressed && ten.clickable) {
+            if (Game.characterList.get(Game.currentTurn).bet + 10 <= Game.characterList.get(Game.currentTurn).balance) {
+                Game.characterList.get(Game.currentTurn).bet += 10;
+                parent.delay(200);
+            }
+        }
+
+        Chips five = new Chips(parent);
+        five.makeChips(600, 700, 5);
+        if (parent.mousePressed && five.clickable) {
+            if (Game.characterList.get(Game.currentTurn).bet + 5 <= Game.characterList.get(Game.currentTurn).balance) {
+                Game.characterList.get(Game.currentTurn).bet += 5;
+                parent.delay(200);
+            }
+        }
+
+    }
+
+    public void renderBetAndPot() {
+
+    }
+
     public void loadData(String filename) throws Exception {
 
         BufferedReader br = new BufferedReader(new FileReader(filename));
@@ -286,6 +359,18 @@ class UI {
 
     }
 
+    public int compare2Hands(ArrayList<Card> hand1, ArrayList<Card> hand2) {
+
+        return 0; //placeholder
+
+    }
+
+    public int compare5Hands(ArrayList<Cards> hand0, ArrayList<Card> hand1, ArrayList<Card> hand2, ArrayList<Card> hand3, ArrayList<Card> hand4) {
+
+        return 0; //placeholder
+
+    }
+
 }
 
 class Buttons {
@@ -297,7 +382,7 @@ class Buttons {
 
     boolean clickable = false;
 
-    public void makeButton(float xpos, float ypos, float width, float height, float fillet, String text) {
+    public void makeButton(float xpos, float ypos, float width, float height, float fillet, String text, int fontSize) {
 
 //        parent.fill (20);
 
@@ -311,7 +396,7 @@ class Buttons {
         parent.rect(xpos - width / 2, ypos - height / 2, width, height, fillet);
         parent.textAlign(parent.CENTER, parent.CENTER);
         parent.fill(0);
-        parent.textSize(50);
+        parent.textSize(fontSize);
         parent.text(text, xpos - width / 2, ypos - height / 2, width, height);
 
     }

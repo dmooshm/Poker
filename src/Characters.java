@@ -8,18 +8,23 @@ import java.util.Collections;
 
 public class Characters {
 
+    PApplet parent;
     String name;
     Hand hand;
     int balance;
     Cards card1;
     Cards card2;
     boolean folded = false;
+    UI UI;
+    public int bet;
 
-    Characters(String name, Hand hand, int balance) {
+    Characters(String name, Hand hand, int balance, PApplet parent) {
 
         this.name = name;
         this.hand = hand;
         this.balance = balance;
+        this.parent = parent;
+        this.UI = new UI(parent); // ← move it here
 
     }
 
@@ -72,16 +77,87 @@ public class Characters {
 
     }
 
+    public void takeTurn() {
+
+        if (folded) {
+            return;
+        }
+
+    }
+
+    public void nextTurn() {
+        Game.currentTurn = (Game.currentTurn + 1) % Game.numberOfPlayers;
+    }
+
 }
 
 
 class Player extends Characters{
 
-    Player(String name, Hand hand, int balance) {
-        super(name, hand, balance);
+    Player(String name, Hand hand, int balance, PApplet parent) {
+        super(name, hand, balance, parent);
     }
 
-    public static void takeTurn(ArrayList<Cards> cardsInPlay) {
+    boolean betting;
+
+    @Override
+    public void takeTurn() {
+
+        if (!betting) {
+
+            boolean firstTurn = true;
+
+            if (firstTurn) {
+                Buttons betButton = new Buttons(parent);
+                betButton.makeButton(Game.screenWidth / 2, Game.screenHeight / 2 + 275, 100, 50, 10, "bet", 35);
+                if (parent.mousePressed && betButton.clickable) {
+                    betting = true;
+                    raise();
+                }
+                firstTurn = false;
+
+            } else {
+
+                Buttons callButton = new Buttons(parent);
+                callButton.makeButton(Game.screenWidth / 2 - 125, Game.screenHeight / 2 + 275, 100, 50, 10, "call", 35);
+                if (parent.mousePressed && callButton.clickable) {
+                    betting = true;
+                    call();
+                }
+
+                Buttons raiseButton = new Buttons(parent);
+                raiseButton.makeButton(Game.screenWidth / 2, Game.screenHeight / 2 + 275, 100, 50, 10, "raise", 35);
+                if (parent.mousePressed && raiseButton.clickable) {
+                    betting = true;
+                    raise();
+                }
+
+                Buttons foldButton = new Buttons(parent);
+                foldButton.makeButton(Game.screenWidth / 2 + 125, Game.screenHeight / 2 + 275, 100, 50, 10, "fold", 35);
+                if (parent.mousePressed && foldButton.clickable) {
+                    betting = true;
+                    fold();
+                }
+
+            }
+
+        } else {
+            UI.renderChips();
+            parent.fill(0);
+            parent.textSize(40);
+            parent.textAlign(parent.CENTER, parent.CENTER);
+            parent.text("Bet: " + bet, Game.screenWidth / 2, Game.screenHeight / 2 + 225);
+            Buttons betButton = new Buttons(parent);
+            betButton.makeButton(725, 700, 115, 40, 10, "make bet", 25);
+            if (parent.mousePressed && betButton.clickable) {
+
+            }
+        }
+
+    }
+
+    @Override
+    public void raise() {
 
     }
 
@@ -90,11 +166,13 @@ class Player extends Characters{
 
 class NPC extends Characters {
 
-    NPC (String name, Hand hand, int balance) {
-        super(name, hand, balance);
+    NPC (String name, Hand hand, int balance, PApplet parent) {
+        super(name, hand, balance, parent);
     }
 
-    public static void takeTurn(ArrayList<Cards> cardsInPlay, ArrayList<Cards> communityCards) {
+    public void takeTurn() {
+
+        System.out.println("took turn");
 
     }
 
